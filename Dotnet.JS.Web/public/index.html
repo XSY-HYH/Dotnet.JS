@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Dotnet.JS.Web 文件仓库</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; margin: 0; background: #f5f6fa; color: #2d3436; }
+header { background: #2c3e50; color: #fff; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+header h1 { margin: 0; font-size: 18px; font-weight: 500; }
+.toolbar { background: #fff; padding: 12px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #eee; }
+.breadcrumb { flex: 1; font-size: 14px; color: #636e72; }
+.breadcrumb a { color: #0984e3; cursor: pointer; text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.btn { padding: 6px 14px; border: 1px solid #dfe6e9; background: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.btn:hover { background: #f1f2f6; }
+.btn-primary { background: #0984e3; color: #fff; border-color: #0984e3; }
+.btn-primary:hover { background: #0873c4; }
+.btn-danger { color: #d63031; border-color: #fab1a0; }
+.btn-danger:hover { background: #ffeaea; }
+main { padding: 16px 24px; }
+table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+th, td { padding: 10px 14px; text-align: left; font-size: 13px; border-bottom: 1px solid #f1f2f6; }
+th { background: #f8f9fa; color: #636e72; font-weight: 500; }
+td .act { margin-right: 8px; cursor: pointer; color: #0984e3; }
+td .act.del { color: #d63031; }
+tr.dir td.name { cursor: pointer; }
+.icon { display: inline-block; width: 16px; margin-right: 6px; }
+.empty { text-align: center; color: #b2bec3; padding: 40px; }
+#status { font-size: 12px; color: #636e72; margin-left: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📁 Dotnet.JS.Web 文件仓库</h1>
+  <div id="status"></div>
+</header>
+<div class="toolbar">
+  <div class="breadcrumb" id="breadcrumb"></div>
+  <input type="file" id="fileInput" multiple style="display:none">
+  <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">上传</button>
+  <button class="btn" onclick="newDir()">新建目录</button>
+  <button class="btn" onclick="loadList()">刷新</button>
+</div>
+<main>
+  <table>
+    <thead>
+      <tr><th style="width:40%">名称</th><th style="width:20%">大小</th><th style="width:25%">修改时间</th><th>操作</th></tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</main>
+
+<script>
+var curPath = '';
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function fmtSize(n) {
+  n = Number(n) || 0;
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n/1024).toFixed(1) + ' KB';
+  if (n < 1073741824) return (n/1048576).toFixed(1) + ' MB';
+  return (n/1073741824).toFixed(2) + ' GB';
+}
+
+function joinPath(base, name) {
+  if (!base) return name;
+  return base + '/' + name;
+}
+
+function parentPath(p) {
+  if (!p) return '';
+  var idx = p.lastIndexOf('/');
+  return idx < 0 ? '' : p.substring(0, idx);
+}
+
+function renderBreadcrumb() {
+  var bc = document.getElementById('breadcrumb');
+  var parts = curPath ? curPath.split('/') : [];
+  var html = '<a onclick="goTo(\'\')">根目录</a>';
+  var acc = '';
+  for (var i = 0; i < parts.length; i++) {
+    if (!parts[i]) continue;
+    acc = acc ? acc + '/' + parts[i] : parts[i];
+    html += ' / <a onclick="goTo(\'' + esc(acc) + '\')">' + esc(parts[i]) + '</a>';
+  }
+  bc.innerHTML = html;
+}
+
+function goTo(p) {
+  curPath = p || '';
+  loadList();
+}
+
+function loadList() {
+  renderBreadcrumb();
+  var url = '/api/list' + (curPath ? ('?path=' + encodeURIComponent(curPath)) : '');
+  fetch(url).then(function(r) { return r.json(); }).then(function(res) {
+    var tbody = document.getElementById('tbody');
+    if (!res.ok) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty">' + esc(res.error) + '</td></tr>';
+      return;
+    }
+    var data = res.data;
+    var html = '';
+    if (curPath) {
+      html += '<tr class="dir"><td class="name" onclick="goTo(\'' + esc(parentPath(curPath)) + '\')"><span class="icon">📂</span>..</td><td>-</td><td>-</td><td></td></tr>';
+    }
+    for (var i = 0; i < data.dirs.length; i++) {
+      var d = data.dirs[i];
+      var dp = joinPath(curPath, d.name);
+      html += '<tr class="dir">' +
+        '<td class="name" onclick="goTo(\'' + esc(dp) + '\')"><span class="icon">📁</span>' + esc(d.name) + '</td>' +
+        '<td>-</td><td>' + esc(d.lastWrite) + '</td>' +
+        '<td><span class="act" onclick="renameItem(\'' + esc(dp) + '\')">重命名</span><span class="act del" onclick="delItem(\'' + esc(dp) + '\')">删除</span></td></tr>';
+    }
+    for (var j = 0; j < data.files.length; j++) {
+      var f = data.files[j];
+      var fp = joinPath(curPath, f.name);
+      html += '<tr>' +
+        '<td><span class="icon">📄</span>' + esc(f.name) + '</td>' +
+        '<td>' + fmtSize(f.size) + '</td><td>' + esc(f.lastWrite) + '</td>' +
+        '<td><a class="act" href="/api/download?path=' + encodeURIComponent(fp) + '">下载</a>' +
+        '<span class="act" onclick="renameItem(\'' + esc(fp) + '\')">重命名</span>' +
+        '<span class="act del" onclick="delItem(\'' + esc(fp) + '\')">删除</span></td></tr>';
+    }
+    if (!html) html = '<tr><td colspan="4" class="empty">空目录</td></tr>';
+    tbody.innerHTML = html;
+    document.getElementById('status').textContent = data.dirs.length + ' 目录 / ' + data.files.length + ' 文件';
+  }).catch(function(e) {
+    document.getElementById('tbody').innerHTML = '<tr><td colspan="4" class="empty">加载失败: ' + esc(e) + '</td></tr>';
+  });
+}
+
+function newDir() {
+  var name = prompt('目录名');
+  if (!name) return;
+  fetch('/api/mkdir', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: joinPath(curPath, name) })
+  }).then(function(r) { return r.json(); }).then(function(res) {
+    if (!res.ok) alert('失败: ' + res.error);
+    loadList();
+  });
+}
+
+function delItem(p) {
+  if (!confirm('删除 ' + p + ' ?')) return;
+  fetch('/api/delete?path=' + encodeURIComponent(p), { method: 'DELETE' })
+    .then(function(r) { return r.json(); }).then(function(res) {
+      if (!res.ok) alert('失败: ' + res.error);
+      loadList();
+    });
+}
+
+function renameItem(p) {
+  var idx = p.lastIndexOf('/');
+  var oldName = idx < 0 ? p : p.substring(idx + 1);
+  var newName = prompt('新名称', oldName);
+  if (!newName || newName === oldName) return;
+  var to = idx < 0 ? newName : p.substring(0, idx) + '/' + newName;
+  fetch('/api/move', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: p, to: to })
+  }).then(function(r) { return r.json(); }).then(function(res) {
+    if (!res.ok) alert('失败: ' + res.error);
+    loadList();
+  });
+}
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  var fileList = e.target.files;
+  var pending = fileList.length;
+  if (pending === 0) return;
+  document.getElementById('status').textContent = '上传中...';
+  for (var i = 0; i < fileList.length; i++) {
+    (function(f) {
+      var reader = new FileReader();
+      reader.onload = function() {
+        var base64 = reader.result.split(',')[1];
+        fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: joinPath(curPath, f.name), base64: base64 })
+        }).then(function(r) { return r.json(); }).then(function(res) {
+          pending--;
+          if (!res.ok) alert('上传 ' + f.name + ' 失败: ' + res.error);
+          if (pending === 0) { e.target.value = ''; loadList(); }
+        });
+      };
+      reader.readAsDataURL(f);
+    })(fileList[i]);
+  }
+});
+
+loadList();
+</script>
+</body>
+</html>

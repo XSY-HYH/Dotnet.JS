@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+.idea/
+*.user
+OFAP.md
+error.log
+storage/
+TypeScript/
+TypeScript-TmLanguage/
+lib/extension/*.dll
