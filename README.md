@@ -1,4 +1,4 @@
-Here's the updated README with that additional note at the end:
+Here's the updated README with a new chapter explaining the project structure:
 
 ---
 
@@ -16,6 +16,16 @@ A JavaScript REPL for .NET with direct access to CLR types and methods.
 - **Extension System**: load C# extension libraries with the convention: `Extension` class + `Initialize(Engine)` entry point
 - **Standard Library**: `fs`, `path`, `convert`, `crypto`, `xml`, `net`, `asp`, `logging`, and more
 - **ASP.NET Core Integration**: build `WebApplication`, register routes and middleware entirely from the JavaScript side
+
+## Project Structure
+
+This repository contains three related projects:
+
+- **Dotnet.JS** — The main project. A JavaScript REPL for .NET that provides a bridge between JS and the CLR, allowing you to load assemblies, invoke methods, and interact with .NET types directly from a JavaScript environment.
+
+- **Dotnet.TS** — An experimental TypeScript language extension for the REPL. This is a work-in-progress add-on that aims to bring TypeScript syntax support to the Dotnet.JS ecosystem.
+
+- **Dotnet.JS.Web** — A test project specifically designed to validate and exercise the ASP.NET Core integration capabilities of the standard library. 
 
 ---
 
