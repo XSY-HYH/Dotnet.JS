@@ -1,7 +1,3 @@
-Here's the updated README with a new chapter explaining the project structure:
-
----
-
 # Dotnet.JS
 
 A JavaScript REPL for .NET with direct access to CLR types and methods.
