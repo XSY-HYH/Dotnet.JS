@@ -1,0 +1,13 @@
+console.log('ws:', typeof ws);
+console.log('sql:', typeof sql);
+console.log('ws.create:', typeof ws.create);
+console.log('ws.connect:', typeof ws.connect);
+console.log('ws.sendText:', typeof ws.sendText);
+console.log('ws.receive:', typeof ws.receive);
+console.log('ws.close:', typeof ws.close);
+console.log('sql.open:', typeof sql.open);
+console.log('sql.query:', typeof sql.query);
+console.log('sql.exec:', typeof sql.exec);
+console.log('sql.scalar:', typeof sql.scalar);
+console.log('sql.loadDriver:', typeof sql.loadDriver);
+console.log('ok');

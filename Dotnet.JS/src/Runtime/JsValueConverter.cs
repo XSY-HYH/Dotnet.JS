@@ -56,6 +56,10 @@ internal static class JsValueConverter
             return jsArray;
         }
 
+        // ArraySegment<> 保留 ObjectWrapper，避免转 JsArray 丢失底层引用
+        if (value.GetType().IsGenericType && value.GetType().GetGenericTypeDefinition() == typeof(ArraySegment<>))
+            return JsValue.FromObject(engine, value);
+
         if (value is IEnumerable enumerable and not string)
         {
             // 泛型集合转 JsArray，非泛型 IEnumerable（如 XmlDocument/XmlNode）保留 ObjectWrapper

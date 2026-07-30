@@ -2,6 +2,7 @@ bin/
 obj/
 .vs/
 .idea/
+.trae/
 *.user
 OFAP.md
 error.log
@@ -9,3 +10,6 @@ storage/
 TypeScript/
 TypeScript-TmLanguage/
 lib/extension/*.dll
+Dotnet.JS\OFAP.md
+Dotnet.JS\README.md
+Dotnet.JS.Web\

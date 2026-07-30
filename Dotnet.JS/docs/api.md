@@ -753,6 +753,54 @@ console.log('bytes:', ip.getAddressBytes(addr));
 console.log('isLoopback:', ip.isLoopback(ip.loopback()));
 ```
 
+## `require('std/net/ws')`
+
+桥接 System.Net.WebSockets.ClientWebSocket，WebSocket 客户端。
+
+| 函数 | 说明 |
+|------|------|
+| `create()` | 新建 ClientWebSocket |
+| `connect(ws, url)` | 连接 ws/wss 地址 |
+| `sendText(ws, text)` | 发送文本帧 |
+| `sendBytes(ws, bytes)` | 发送二进制帧 |
+| `receive(ws, bufSize?)` | 接收一帧，返回 `{type, count, endOfMessage, text, buffer}`，type 1=文本 2=二进制 8=关闭 |
+| `state(ws)` | 获取连接状态 |
+| `close(ws)` | 正常关闭连接 |
+
+```javascript
+var ws = require('std/net/ws');
+var c = ws.create();
+ws.connect(c, 'wss://echo.example.com');
+ws.sendText(c, 'hello');
+var r = ws.receive(c);
+console.log('recv:', r.text);
+ws.close(c);
+```
+
+## `require('std/sql')`
+
+桥接 System.Data.Common，通用 SQL 访问，驱动 dll 放 lib/ncl/ 由 loadDriver 加载。
+
+| 函数 | 说明 |
+|------|------|
+| `loadDriver(dllName)` | 从 lib/ncl/ 加载数据库驱动 dll |
+| `open(factoryTypeName, connectionString)` | 用 DbProviderFactory 打开连接，factoryTypeName 如 'Microsoft.Data.Sqlite.SqliteFactory' |
+| `query(conn, sql, params?)` | 查询返回行数组，每行为 {列名: 值} |
+| `exec(conn, sql, params?)` | 执行非查询，返回受影响行数 |
+| `scalar(conn, sql, params?)` | 执行返回单值 |
+| `close(conn)` | 关闭连接 |
+
+```javascript
+var sql = require('std/sql');
+sql.loadDriver('Microsoft.Data.Sqlite.dll');
+var conn = sql.open('Microsoft.Data.Sqlite.SqliteFactory', 'Data Source=test.db');
+sql.exec(conn, 'CREATE TABLE IF NOT EXISTS t(id INTEGER, name TEXT)');
+sql.exec(conn, 'INSERT INTO t(id, name) VALUES(?, ?)', [1, 'foo']);
+var rows = sql.query(conn, 'SELECT * FROM t');
+console.log(rows);
+sql.close(conn);
+```
+
 ## `require('std/io/stream')`
 
 桥接 System.IO.Stream / StreamReader / StreamWriter / MemoryStream。
