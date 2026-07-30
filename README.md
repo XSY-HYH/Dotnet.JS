@@ -1,6 +1,12 @@
+Here's the updated version with that line in English:
+
+---
+
 # Dotnet.JS
 
 A JavaScript REPL for .NET with direct access to CLR types and methods.
+
+❤ This project is currently for fun — I haven't fixed all the command-line rough edges yet, but I'll keep updating it actively! 🥰
 
 ## Features
 
